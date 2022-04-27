@@ -1,12 +1,58 @@
 import cv2
 import mediapipe as mp
 import time
-from tensorflow import keras
+from tensorflow import keras # tensorflow==2.3.0
+from tensorflow.keras.preprocessing.image import img_to_array
+from tensorflow.keras.models import load_model
 from PIL import Image
 import numpy as np
+import copy
+import itertools
+
+def calc_landmark_list(image, landmarks):
+    image_width, image_height = image.shape[1], image.shape[0]
+
+    landmark_point = []
+
+    
+    for _, landmark in enumerate(landmarks.landmark):
+        landmark_x = min(int(landmark.x * image_width), image_width - 1)
+        landmark_y = min(int(landmark.y * image_height), image_height - 1)
+        
+
+        landmark_point.append([landmark_x, landmark_y])
+
+    return landmark_point
+
+
+def pre_process_landmark(landmark_list):
+    temp_landmark_list = copy.deepcopy(landmark_list)
+
+    
+    base_x, base_y = 0, 0
+    for index, landmark_point in enumerate(temp_landmark_list):
+        if index == 0:
+            base_x, base_y = landmark_point[0], landmark_point[1]
+
+        temp_landmark_list[index][0] = temp_landmark_list[index][0] - base_x
+        temp_landmark_list[index][1] = temp_landmark_list[index][1] - base_y
+
+    
+    temp_landmark_list = list(
+        itertools.chain.from_iterable(temp_landmark_list))
+
+    
+    max_value = max(list(map(abs, temp_landmark_list)))
+
+    def normalize_(n):
+        return n / max_value
+
+    temp_landmark_list = list(map(normalize_, temp_landmark_list))
+
+    return temp_landmark_list
 
 #model located at https://www.kaggle.com/code/sayakdasgupta/sign-language-classification-cnn-99-40-accuracy/data
-model = keras.models.load_model('asl_predictor.h5')
+model = load_model('alpha_clf.hdf5')
 
 cap = cv2.VideoCapture(0)
 mpHands = mp.solutions.hands
@@ -38,45 +84,25 @@ while True:
 
     #print(results.multi_hand_landmarks)
     if results.multi_hand_landmarks:
-        for handLms in results.multi_hand_landmarks:
+        for hand_landmarks, handedness in zip(results.multi_hand_landmarks,results.multi_handedness):
             h, w, c = image.shape
             x_max = 0
             y_max = 0
             x_min = w
             y_min = h
-            for id, lm in enumerate (handLms.landmark):
-                #print(id,lm)
-                cx, cy = int(lm.x*w), int(lm.y*h)
-                #print(id, cx, cy)
-                #if id == 4:
-                #    cv2.circle(image,(cx,cy),15, (255,0,255),cv2.FILLED)
+            #for id, lm in enumerate (handLms.landmark):
+            landmark_list = calc_landmark_list(imgRGB, hand_landmarks)
+            pre_processed_landmark_list = pre_process_landmark(landmark_list)
 
-                if cx > x_max:
-                    x_max = cx
-                if cx < x_min:
-                    x_min = cx
-                if cy > y_max:
-                    y_max = cy
-                if cy < y_min:
-                    y_min = cy
+            #cropped_image = image[y_min - 100:y_max + 100, x_min - 100:x_max + 100]
 
-            cropped_image = image[y_min - 100:y_max + 100, x_min - 100:x_max + 100]
-
-            #print("\nBefore\n")
-            #print(cropped_image.shape)
-            size = 64,64
-            i = cv2.resize(cropped_image, size)
-            #print("\nAfter\n")
-            #print(i.shape)
-            #i = i.astype('float32')/255.0
-            #cv2.imwrite('savedImage.jpg', i)
-            i = i.reshape(1,64,64,3)
-            predictions = model.predict(i)
-            classes_x=np.argmax(predictions,axis=1)
-            cv2.rectangle(image, (x_min - 100, y_min - 100), (x_max + 100, y_max + 100), (0, 255, 0), 2)
-            mpDraw.draw_landmarks(image, handLms, mpHands.HAND_CONNECTIONS)
-            print(get_key(classes_x[0]))
-            cv2.putText(image, get_key(classes_x[0]),(10,60), cv2.FONT_HERSHEY_PLAIN,3, (255,0,255),4)
+            predictions = model.predict(np.array([pre_processed_landmark_list], dtype=np.float32))
+            print("\nHeloo\n")
+            classes_x=np.argmax(np.squeeze(predictions))
+            #cv2.rectangle(image, (x_min - 100, y_min - 100), (x_max + 100, y_max + 100), (0, 255, 0), 2)
+            #mpDraw.draw_landmarks(image, handLms, mpHands.HAND_CONNECTIONS)
+            print(get_key(classes_x))
+            cv2.putText(image, get_key(classes_x),(10,60), cv2.FONT_HERSHEY_PLAIN,3, (255,0,255),4)
             print("\nLabelo\n")
 
             #predictions = [model.predict(cropped_image.reshape(1,64,64,3))]
