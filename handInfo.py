@@ -25,7 +25,7 @@ def get_key(val):
     for key, value in labels_dict.items():
          if val == value:
              return key
- 
+
     return "key doesn't exist"
 
 
@@ -48,8 +48,8 @@ while True:
                 #print(id,lm)
                 cx, cy = int(lm.x*w), int(lm.y*h)
                 #print(id, cx, cy)
-                if id == 4:
-                    cv2.circle(image,(cx,cy),15, (255,0,255),cv2.FILLED)
+                #if id == 4:
+                #    cv2.circle(image,(cx,cy),15, (255,0,255),cv2.FILLED)
 
                 if cx > x_max:
                     x_max = cx
@@ -60,21 +60,25 @@ while True:
                 if cy < y_min:
                     y_min = cy
 
-            cv2.rectangle(image, (x_min - 50, y_min - 50), (x_max + 50, y_max + 50), (0, 255, 0), 2)
-            mpDraw.draw_landmarks(image, handLms, mpHands.HAND_CONNECTIONS)
-            cropped_image = image[y_min - 50:y_max - 50, x_min + 50:x_max + 50]
-            #cv2.imwrite('savedImage.jpg', cropped_image)
-            
+            cropped_image = image[y_min - 100:y_max + 100, x_min - 100:x_max + 100]
+
+            #print("\nBefore\n")
+            #print(cropped_image.shape)
             size = 64,64
             i = cv2.resize(cropped_image, size)
-            i = i.astype('float32')/255.0
-            predictions = model.predict(i.reshape(1,64,64,3))
+            #print("\nAfter\n")
+            #print(i.shape)
+            #i = i.astype('float32')/255.0
+            #cv2.imwrite('savedImage.jpg', i)
+            i = i.reshape(1,64,64,3)
+            predictions = model.predict(i)
             classes_x=np.argmax(predictions,axis=1)
-            print("\nHello\n")
+            cv2.rectangle(image, (x_min - 100, y_min - 100), (x_max + 100, y_max + 100), (0, 255, 0), 2)
+            mpDraw.draw_landmarks(image, handLms, mpHands.HAND_CONNECTIONS)
             print(get_key(classes_x[0]))
             cv2.putText(image, get_key(classes_x[0]),(10,60), cv2.FONT_HERSHEY_PLAIN,3, (255,0,255),4)
-            print("\nHello\n")
-            
+            print("\nLabelo\n")
+
             #predictions = [model.predict(cropped_image.reshape(1,64,64,3))]
 #    if results.multi_hand_world_landmarks:
 #        for handLms in results.multi_hand_world_landmarks:
