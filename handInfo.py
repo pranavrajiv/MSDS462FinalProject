@@ -52,7 +52,7 @@ def pre_process_landmark(landmark_list):
     return temp_landmark_list
 
 #model located at https://www.kaggle.com/code/sayakdasgupta/sign-language-classification-cnn-99-40-accuracy/data
-model = load_model('alpha_clf.hdf5')
+model = load_model('newModel.hdf5')
 
 cap = cv2.VideoCapture(0)
 mpHands = mp.solutions.hands
