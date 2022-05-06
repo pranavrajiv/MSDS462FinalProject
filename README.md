@@ -1,2 +1,2 @@
-# MSDS462FinalProject
+#  MSDS462FinalProject
 Sign Language detection
