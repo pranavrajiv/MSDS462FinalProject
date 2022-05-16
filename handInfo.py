@@ -45,7 +45,7 @@ def pre_process_landmark(landmark_list):
 
     return temp_landmark_list
 
-model = load_model('model_LMST_Convo_BB.h5')
+model = load_model('newModel.hdf5')
 
 cap = cv2.VideoCapture(0)
 mpHands = mp.solutions.hands
