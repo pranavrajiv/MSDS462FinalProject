@@ -79,15 +79,15 @@ while True:
             pre_processed_landmark_list = pre_process_landmark(landmark_list)
             predictions = model.predict(np.array([pre_processed_landmark_list], dtype=np.float32))
             classes_x = np.argmax(np.squeeze(predictions))
+            key = get_key(classes_x)
             
-            tempList.append(classes_x)
+            tempList.append(key)
             if len(set(tempList)) != 1:
                 tempList = []
                 startTime = datetime.now()
                 
             if int((datetime.now() - startTime).total_seconds()) > 1: #hold the hand sign for at-least 1s
-                if classes_x:
-                    key = get_key(classes_x)
+                if key:
                     if key == "space":
                         class_x_1.append(" ")
                     elif key == "del":
@@ -99,7 +99,7 @@ while True:
                 startTime = datetime.now()
             
             print("\nLabel")
-            print(get_key(classes_x))
+            print(key)
             print("\n")
 
             cv2.putText(image,''.join(class_x_1), (10, 60), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 4)
