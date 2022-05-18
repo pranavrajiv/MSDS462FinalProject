@@ -45,7 +45,7 @@ def pre_process_landmark(landmark_list):
 
     return temp_landmark_list
 
-model = load_model('newModel.hdf5')
+model = load_model('sampleModel')
 
 cap = cv2.VideoCapture(0)
 mpHands = mp.solutions.hands
