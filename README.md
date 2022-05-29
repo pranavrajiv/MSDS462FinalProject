@@ -1,2 +1,2 @@
 #  MSDS462FinalProject
-Sign Language detection
+Real Time Sign Language detection using mediPipe and AWS SageMaker
